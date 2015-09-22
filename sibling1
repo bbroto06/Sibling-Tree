@@ -1,0 +1,248 @@
+// Program to fill sibling pointers of a tree
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+// tree node
+typedef struct tree_node tree_node_t;
+struct tree_node
+{
+  int value;
+  int count;
+  tree_node_t *sibling;
+  tree_node_t *children[]; // It is itself dynamic. The size of children array is decided in line : 52, 53
+};
+
+// delete the entire tree
+void delete_tree(tree_node_t *pTree)
+{
+  tree_node_t *root=NULL, *temp=NULL;
+  root = pTree;
+  while(root != NULL)
+  {
+    temp = root->sibling;
+    free(root);
+    root = temp;
+  }
+}
+
+// display all nodes of the tree
+void display(tree_node_t *pTree)
+{
+  printf("Displaying the tree\n");
+  while(pTree->sibling != NULL)
+  {
+    printf("%d->", pTree->value);
+    pTree = pTree->sibling;
+  } 
+  printf("%d->END\n\n", pTree->value);
+}
+
+// return new tree node initialzed to NULL
+tree_node_t *getNode(int value_node, int count_of_children)
+{
+  int i=0;
+  tree_node_t *pNode = NULL;
+  pNode = (tree_node_t *)malloc(sizeof(tree_node_t));
+  if(pNode)
+  {
+    pNode->value = value_node;
+    pNode->count = count_of_children;
+    for(i=0; i<count_of_children; i++)
+      pNode->children[i] = NULL; 
+    pNode->sibling = NULL;
+  }
+  else // Error handling for malloc failure
+    printf("\nERROR : Node not created. Memory Full\n");
+  return pNode;
+}
+
+// join all children of current node 
+tree_node_t *join_children(tree_node_t *start)
+{
+  int i, count;
+  tree_node_t *end;
+  count = start->count;
+  for(i=0; i<count-1; i++)
+    start->children[i]->sibling = start->children[i+1];
+  end = start->children[count-1]; // return the right-most child of start
+  return end;
+}
+
+// set the sibling
+tree_node_t *set_sibling(tree_node_t *pTree)
+{
+  tree_node_t *current=NULL, *last_node=NULL, *temp=NULL;
+  current = pTree;
+
+  // FOR ROOT NODE
+  if(current->count == 0) // if root node is the only node in the tree
+    return pTree;
+  else if(current->count > 1) // if root has more than 1 children
+    last_node = join_children(current);
+  else if(current->count == 1) // if root has only 1 child
+  {
+    if(current->children[0]->count == 0) // if tree has only 2 nodes : the root and a child
+    {
+      current->sibling = current->children[0];
+      return pTree;
+    }
+    else
+      last_node = current->children[0];
+  }
+  current->sibling = current->children[0];
+
+  // FOR NON-ROOT NODES
+  while(1)
+  {
+    current = current->sibling;
+    if(current == NULL) // breaking condition
+      break;
+    if(current->count >= 1)
+    {
+      temp = last_node;
+      last_node = join_children(current); // for single or multiple children, call join
+      temp->sibling = current->children[0];
+    }
+  }
+  return pTree;
+}
+
+// Driver
+int main()
+{
+  printf("Program to fill sibling pointers of a tree\n\n");
+  tree_node_t *root=NULL, *root1=NULL, *root2=NULL, *root3=NULL, *root4=NULL, *root5=NULL, *root6=NULL, *root7=NULL, *temp = NULL;
+
+  printf("Test Case 1\n"); // TC1
+  root = getNode(1, 1);
+  temp = getNode(2, 1);
+  root->children[0] = temp;
+  root1 = root->children[0];
+  temp = getNode(3, 1);
+  root1->children[0] = temp;
+  root2 = root1->children[0];
+  temp = getNode(4, 0);
+  root2->children[0] = temp;
+  root = set_sibling(root); // calling set_sibling 
+  display(root);
+  //delete_tree(root);
+  root= root1= root2= root3= root4= root5= root6= root7=temp = NULL;
+
+  printf("Test Case 2\n"); // TC2
+  root = getNode(1, 1);
+  temp = getNode(2, 1);
+  root->children[0] = temp; 
+  root1 = root->children[0]; // root1 = 2
+  temp = getNode(3, 3); 
+  root1->children[0] = temp;
+  root2 = root1->children[0]; // root2 = 3
+  temp = getNode(4, 0);
+  root2->children[0] = temp;
+  temp = getNode(5, 1);
+  root2->children[1] = temp;
+  temp = getNode(6, 2);
+  root2->children[2] = temp;
+  root3 = root2->children[1]; // root3 = 5
+  temp = getNode(7, 1);
+  root3->children[0] = temp;
+  root4 = root2->children[2]; // root4 = 6
+  temp = getNode(8, 0);
+  root4->children[0] = temp;
+  temp = getNode(9, 1);
+  root4->children[1] = temp;
+  root5 = root3->children[0]; // root5 = 7
+  temp = getNode(10, 0);
+  root5->children[0] = temp;  
+  root6 = root4->children[1]; // root6 = 9
+  temp = getNode(11, 1);
+  root6->children[0] = temp;
+  root7 = root6->children[0]; // root7 = 11
+  temp = getNode(12, 0);
+  root7->children[0] = temp;
+  root = set_sibling(root); // calling set_sibling 
+  display(root);
+  //delete_tree(root);
+  root= root1= root2= root3= root4= root5= root6= root7=temp = NULL;
+
+  printf("Test Case 3\n"); // TC3
+  root = getNode(1, 4); // root = 1
+  temp = getNode(2, 0);
+  root->children[0] = temp;
+  temp = getNode(3, 3);
+  root->children[1] = temp; 
+  temp = getNode(4, 0);
+  root->children[2] = temp;
+  temp = getNode(5, 2);
+  root->children[3] = temp;
+  root1 = root->children[1]; // root1 = 3  
+  temp = getNode(6, 0);
+  root1->children[0] = temp;
+  temp = getNode(7, 1);
+  root1->children[1] = temp;
+  temp = getNode(8, 0);
+  root1->children[2] = temp;
+  root2 = root->children[3]; // root2 = 5
+  temp = getNode(9, 1);
+  root2->children[0] = temp;
+  temp = getNode(10, 0);
+  root2->children[1] = temp;
+  root3 = root1->children[1]; //root3 = 7
+  temp = getNode(11, 0);
+  root3->children[0] = temp;
+  root4 = root2->children[0]; //root4 = 9
+  temp = getNode(12, 0);
+  root4->children[0] = temp;
+  root = set_sibling(root); // calling set_sibling 
+  display(root);
+  //delete_tree(root);
+  root= root1= root2= root3= root4= root5= root6= root7=temp = NULL;
+
+  printf("Test Case 4\n"); // TC4
+  root = getNode(1, 4); // root = 1
+  temp = getNode(2, 0);
+  root->children[0] = temp;
+  temp = getNode(3, 0);
+  root->children[1] = temp; 
+  temp = getNode(4, 1);
+  root->children[2] = temp;
+  temp = getNode(5, 0);
+  root->children[3] = temp;
+  root1 = root->children[2]; // root1 = 4  
+  temp = getNode(6, 0);
+  root1->children[0] = temp;
+  root = set_sibling(root); // calling set_sibling 
+  display(root);
+  //delete_tree(root);
+  root= root1= root2= root3= root4= root5= root6= root7=temp = NULL;
+
+  printf("Test Case 5\n"); // TC5
+  root = getNode(1, 4); // root = 1
+  temp = getNode(2, 0);
+  root->children[0] = temp;
+  temp = getNode(3, 0);
+  root->children[1] = temp; 
+  temp = getNode(4, 3);
+  root->children[2] = temp;
+  temp = getNode(5, 0);
+  root->children[3] = temp;
+  root1 = root->children[2]; // root1 = 4
+  temp = getNode(6, 0);
+  root1->children[0] = temp;
+  temp = getNode(7, 2);
+  root1->children[1] = temp;
+  temp = getNode(8, 0);
+  root1->children[2] = temp;
+  root2 = root1->children[1]; // root2 = 7
+  temp = getNode(9, 0);
+  root2->children[0] = temp;
+  temp = getNode(10, 0);
+  root2->children[1] = temp;
+  root = set_sibling(root); // calling set_sibling 
+  display(root);
+  //delete_tree(root);
+  root= root1= root2= root3= root4= root5= root6= root7=temp = NULL;
+
+  return 0;
+}
